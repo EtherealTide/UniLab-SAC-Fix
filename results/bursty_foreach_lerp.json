@@ -1,0 +1,95 @@
+{
+  "metadata": {
+    "timestamp_utc": "2026-09-22T06:32:08.776652+00:00",
+    "hostname": "pc823-System-Product-Name",
+    "platform": "Linux-7.0.0-31-generic-x86_64-with-glibc2.43",
+    "python": "3.13.15",
+    "torch": "2.8.0+cu128",
+    "cuda_runtime": "12.8",
+    "cudnn": 91002,
+    "gpu": "NVIDIA GeForce RTX 4090",
+    "gpu_properties": "_CudaDeviceProperties(name='NVIDIA GeForce RTX 4090', major=8, minor=9, total_memory=48507MB, multi_processor_count=128, uuid=8ae4cab5-8a6c-4974-eaef-76ddc24d239f, pci_bus_id=1, pci_device_id=0, pci_domain_id=0, L2_cache_size=72MB)",
+    "unilab_rl_git": "77450d2ad00d1c56c320e45a2c4150dec2077acc",
+    "arguments": {
+      "cases": "compile",
+      "device": "cuda:0",
+      "batch_size": 8192,
+      "updates_per_step": 8,
+      "policy_frequency": 4,
+      "obs_dim": 98,
+      "critic_obs_dim": 101,
+      "action_dim": 29,
+      "actor_hidden_dim": 512,
+      "critic_hidden_dim": 768,
+      "num_atoms": 101,
+      "num_q_networks": 2,
+      "input_layout": "replay_packed_views",
+      "amp": true,
+      "amp_dtype": "auto",
+      "warmup": 10,
+      "iterations": 50,
+      "inter_cycle_sleep_ms": 32.0,
+      "read_production_metrics": true,
+      "target_ms": 20.0,
+      "output": "/home/pc823/\u684c\u9762/unilabsim/UniLab-SAC-Fix/results/bursty_foreach_lerp.json",
+      "unilab_rl_root": "/home/pc823/\u684c\u9762/unilabsim/unilab_rl"
+    },
+    "environment": {}
+  },
+  "results": [
+    {
+      "case": {
+        "name": "compile",
+        "use_compile": true,
+        "critic_graph": false,
+        "actor_graph": false,
+        "packed": false,
+        "force_compile_cudagraphs": null
+      },
+      "effective": {
+        "use_compile": true,
+        "use_amp": true,
+        "amp_dtype": "torch.bfloat16",
+        "critic_graph": false,
+        "actor_graph": false,
+        "critic_packed": false,
+        "actor_packed": false,
+        "target_update_captured": false
+      },
+      "cycle_device_ms": {
+        "mean": 17.516599006652832,
+        "median": 17.532416343688965,
+        "p90": 17.953174018859862,
+        "p95": 18.02260789871216,
+        "min": 16.638975143432617,
+        "max": 18.32691192626953
+      },
+      "cycle_host_ms": {
+        "mean": 17.621754860047076,
+        "median": 17.63931400000729,
+        "p90": 18.060060000607336,
+        "p95": 18.130193501201575,
+        "min": 16.813762998936,
+        "max": 18.433204999382724
+      },
+      "critic_device_ms": {
+        "mean": 1.698907208442688,
+        "median": 1.708512008190155,
+        "p90": 1.733247947692871,
+        "p95": 1.7612671732902527,
+        "min": 1.5964159965515137,
+        "max": 1.8339840173721313
+      },
+      "actor_device_ms": {
+        "mean": 1.4736255943775176,
+        "median": 1.435424029827118,
+        "p90": 1.6364544272422792,
+        "p95": 1.6804351925849916,
+        "min": 1.2144639492034912,
+        "max": 1.798143982887268
+      },
+      "target_ms": 20.0,
+      "passes_target": true
+    }
+  ]
+}

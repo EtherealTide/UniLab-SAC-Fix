@@ -6,6 +6,8 @@ used by `sac/g1_walk_flat/mujoco` in UniLab issue #662 and PR #667.
 The investigation and final numbers are documented in [RESULTS.md](RESULTS.md).
 The step-by-step Chinese reproduction guide and final report are available in
 [REPRODUCTION_REPORT_ZH.md](REPRODUCTION_REPORT_ZH.md).
+The complete experiment-by-experiment optimization log is in
+[EXPERIMENT_LOG_ZH.md](EXPERIMENT_LOG_ZH.md).
 On an RTX 4090, three independent 300-iteration runs achieved tail-150 means of
 19.177, 19.140, and 18.749 ms, meeting the `<=20 ms` target in every run.
 
