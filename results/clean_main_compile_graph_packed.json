@@ -1,0 +1,145 @@
+{
+  "metadata": {
+    "timestamp_utc": "2026-09-22T05:49:48.663633+00:00",
+    "hostname": "pc823-System-Product-Name",
+    "platform": "Linux-7.0.0-31-generic-x86_64-with-glibc2.43",
+    "python": "3.13.15",
+    "torch": "2.8.0+cu128",
+    "cuda_runtime": "12.8",
+    "cudnn": 91002,
+    "gpu": "NVIDIA GeForce RTX 4090",
+    "gpu_properties": "_CudaDeviceProperties(name='NVIDIA GeForce RTX 4090', major=8, minor=9, total_memory=48507MB, multi_processor_count=128, uuid=8ae4cab5-8a6c-4974-eaef-76ddc24d239f, pci_bus_id=1, pci_device_id=0, pci_domain_id=0, L2_cache_size=72MB)",
+    "unilab_rl_git": null,
+    "arguments": {
+      "cases": "compile,graph_packed",
+      "device": "cuda:0",
+      "batch_size": 8192,
+      "updates_per_step": 8,
+      "policy_frequency": 4,
+      "obs_dim": 98,
+      "critic_obs_dim": 101,
+      "action_dim": 29,
+      "actor_hidden_dim": 512,
+      "critic_hidden_dim": 768,
+      "num_atoms": 101,
+      "num_q_networks": 2,
+      "amp": true,
+      "amp_dtype": "auto",
+      "warmup": 5,
+      "iterations": 30,
+      "read_production_metrics": true,
+      "target_ms": 20.0,
+      "output": "/home/pc823/\u684c\u9762/unilabsim/UniLab-SAC-Fix/results/clean_main_compile_graph_packed.json",
+      "unilab_rl_root": "/tmp/unilab-rl-main.icvndF"
+    },
+    "environment": {}
+  },
+  "results": [
+    {
+      "case": {
+        "name": "compile",
+        "use_compile": true,
+        "critic_graph": false,
+        "actor_graph": false,
+        "packed": false
+      },
+      "effective": {
+        "use_compile": true,
+        "use_amp": true,
+        "amp_dtype": "torch.bfloat16",
+        "critic_graph": false,
+        "actor_graph": false,
+        "critic_packed": false,
+        "actor_packed": false,
+        "target_update_captured": false
+      },
+      "cycle_device_ms": {
+        "mean": 19.421674728393555,
+        "median": 19.371024131774902,
+        "p90": 19.742002487182617,
+        "p95": 19.82568645477295,
+        "min": 19.073759078979492,
+        "max": 20.258943557739258
+      },
+      "cycle_host_ms": {
+        "mean": 19.434892166646023,
+        "median": 19.383279999601655,
+        "p90": 19.752807000440953,
+        "p95": 19.838580450414156,
+        "min": 19.08593599910091,
+        "max": 20.27119099875563
+      },
+      "critic_device_ms": {
+        "mean": 1.8939023971557618,
+        "median": 1.8212479948997498,
+        "p90": 2.1234559535980226,
+        "p95": 2.1316128730773927,
+        "min": 1.7943040132522583,
+        "max": 2.2428159713745117
+      },
+      "actor_device_ms": {
+        "mean": 1.756305593252182,
+        "median": 1.7017760276794434,
+        "p90": 1.9248256444931031,
+        "p95": 1.972819232940674,
+        "min": 1.6866240501403809,
+        "max": 2.0376319885253906
+      },
+      "target_ms": 20.0,
+      "passes_target": true
+    },
+    {
+      "case": {
+        "name": "graph_packed",
+        "use_compile": true,
+        "critic_graph": true,
+        "actor_graph": true,
+        "packed": true
+      },
+      "effective": {
+        "use_compile": true,
+        "use_amp": true,
+        "amp_dtype": "torch.bfloat16",
+        "critic_graph": true,
+        "actor_graph": true,
+        "critic_packed": true,
+        "actor_packed": true,
+        "target_update_captured": false
+      },
+      "cycle_device_ms": {
+        "mean": 29.044440523783365,
+        "median": 29.121007919311523,
+        "p90": 29.36631374359131,
+        "p95": 29.436040306091307,
+        "min": 28.3002872467041,
+        "max": 29.49407958984375
+      },
+      "cycle_host_ms": {
+        "mean": 29.090524999931706,
+        "median": 29.13952299968514,
+        "p90": 29.377716901399253,
+        "p95": 29.448892500295187,
+        "min": 28.31162700022105,
+        "max": 29.505930999221164
+      },
+      "critic_device_ms": {
+        "mean": 2.8847439646720887,
+        "median": 2.749727964401245,
+        "p90": 3.269939231872559,
+        "p95": 3.3717249035835266,
+        "min": 2.7443199157714844,
+        "max": 3.502079963684082
+      },
+      "actor_device_ms": {
+        "mean": 2.592513644695282,
+        "median": 2.487071990966797,
+        "p90": 2.9471744298934937,
+        "p95": 2.9562880396842957,
+        "min": 2.482880115509033,
+        "max": 3.111936092376709
+      },
+      "target_ms": 20.0,
+      "passes_target": false
+    }
+  ]
+}

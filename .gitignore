@@ -1,0 +1,8 @@
+results/*.json
+!results/clean_main_compile_graph_packed.json
+!results/compile_inductor_cudagraphs_ab.json
+!results/bursty_final_single_graph.json
+!results/training_single_graph_1.json
+!results/training_repeats.json
+__pycache__/
+.pytest_cache/

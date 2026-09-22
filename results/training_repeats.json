@@ -1,0 +1,49 @@
+{
+  "metric": "timing/learner_train_ms",
+  "workload": {
+    "gpu": "NVIDIA GeForce RTX 4090",
+    "task": "g1_walk_flat",
+    "backend": "mujoco",
+    "num_envs": 2048,
+    "batch_size": 8192,
+    "updates_per_step": 8,
+    "policy_frequency": 4,
+    "iterations_per_run": 300,
+    "steady_state_tail": 150
+  },
+  "target_ms": 20.0,
+  "runs": [
+    {
+      "name": "single_graph_1",
+      "mean_ms": 19.17727933247884,
+      "median_ms": 18.941234588623047,
+      "p90_ms": 23.856959342956543,
+      "p95_ms": 25.062228107452388,
+      "min_ms": 14.619682312011719,
+      "max_ms": 26.899646759033203,
+      "passes_target": true
+    },
+    {
+      "name": "single_graph_2",
+      "mean_ms": 19.139630006154377,
+      "median_ms": 19.41565704345703,
+      "p90_ms": 22.4283447265625,
+      "p95_ms": 23.25553627014159,
+      "min_ms": 14.489611625671387,
+      "max_ms": 24.886768341064453,
+      "passes_target": true
+    },
+    {
+      "name": "single_graph_3",
+      "mean_ms": 18.74878569920858,
+      "median_ms": 18.961278915405273,
+      "p90_ms": 22.556178283691406,
+      "p95_ms": 23.257266044616696,
+      "min_ms": 14.78606128692627,
+      "max_ms": 26.1195011138916,
+      "passes_target": true
+    }
+  ],
+  "mean_of_run_means_ms": 19.021898345947266,
+  "all_runs_pass": true
+}
