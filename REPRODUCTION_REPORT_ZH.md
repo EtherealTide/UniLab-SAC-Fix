@@ -349,19 +349,22 @@ CUDA_VISIBLE_DEVICES=0 UV_CACHE_DIR=/tmp/unilab-uv-cache \
 
 以下路径均相对于 `unilab_rl` 仓库。
 
-### 12.1 最关键的问题：actor compiled graph 被拆碎
+### 12.1 actor 计算图与 critic 梯度：需要区分基线和中间实验
 
 - `src/uni_rl/algos/fast_sac/learner.py:736`：`_actor_loss_tensors`，这是交给
   `torch.compile` 的 actor loss 主体；
-- `src/uni_rl/algos/fast_sac/learner.py:656`：`_critic_parameters_frozen`；
-- `src/uni_rl/algos/fast_sac/learner.py:767`：手工 Graph capture candidate 在 compiled
-  callable 外冻结 critic；
-- `src/uni_rl/algos/fast_sac/learner.py:1518`：普通 compiled actor update 使用同样边界。
+- `src/uni_rl/algos/fast_sac/learner.py:656`：最终版新增的
+  `_critic_parameters_frozen`；
+- `src/uni_rl/algos/fast_sac/learner.py:767`、`1518`：最终版在调用 compiled
+  callable 之前冻结 critic，而不是把冻结逻辑写进 compiled loss。
 
-问题版本把 `parameter.requires_grad_(False/True)` 写在 `_actor_loss_tensors` 内部。
-`requires_grad_` 是修改 Tensor 元数据的 Python 操作，Dynamo 无法把它和网络计算
-稳定融合，因此得到 3 graphs / 2 graph breaks。修复后 compiled callable 内只剩
-张量计算，恢复为 1 graph / 0 graph breaks。
+需要特别纠正一个容易造成误解的说法：基线 `77450d2` 的
+`_actor_loss_tensors`（约 671--695 行）没有 `requires_grad_`；它的
+`update_actor` 直接调用该函数。因此“基线把 `requires_grad_` 写进 compiled loss
+导致 graph break”不是 Git 历史能够证明的事实，而是我们排查时曾尝试过的中间写法。
+该中间写法确实会造成图拆分，所以随后把冻结边界移到 compiled callable 外；最终版
+compiled loss 内只保留张量计算。冻结 critic 不是切断 actor 梯度：critic 权重不需要
+`dL/dW`，但输入 action 仍然需要 `dQ/da`。
 
 冻结 critic 不是切断 actor 梯度：critic 权重不需要 `dL/dW`，但输入 action 仍然
 需要 `dQ/da`，所以策略仍能正常学习。
@@ -425,10 +428,9 @@ CUDA_VISIBLE_DEVICES=0 UV_CACHE_DIR=/tmp/unilab-uv-cache \
 2. 当前版本中手工 Graph 结构仍在，并未被简单删除或完全破坏。
 3. 但 4090 上 `torch.compile` 会融合许多小 kernel；手工 Graph 捕获未融合 eager
    kernels，实测约 29 ms，不能因为名字叫 CUDA Graph 就默认更快。
-4. 默认 compiled 路径中，actor loss 内的 `requires_grad_` 元数据修改造成 graph
-   break，这才是新版最关键的图结构回归。
-5. 把冻结边界移到 compiled callable 外后，actor 从 3 图恢复为 1 图，同时保留
-   `dQ/da`。
+4. 基线 actor 更新还会为 critic 参数计算无用的权重梯度；最终版把冻结边界放在
+   compiled callable 外，减少这部分反向传播开销，同时保留 `dQ/da`。
+5. 排查中若把冻结动作误放进 compiled loss，会出现 graph break；最终版没有这样做。
 6. 再去掉 loss finite check、metrics `.item()`、inference sync 等 host 等待点，完整
    learner burst 恢复连续。
 7. `max_autotune` 虽把微基准降到约 15.63 ms，但首次编译多约 35 秒，并让 collector
@@ -438,14 +440,14 @@ CUDA_VISIBLE_DEVICES=0 UV_CACHE_DIR=/tmp/unilab-uv-cache \
 
 ## 14. 可直接用于汇报的摘要
 
-> 本次排查确认，当前 SAC 性能回退并非 PR #667 的手工 CUDA Graph 被直接破坏。
-> 在 RTX 4090 上，手工 Graph 捕获未融合 eager kernels，完整 learner cycle 约为
-> 29 ms；默认 `torch.compile`/Inductor 路径更适合当前硬件。新版主要回归点是 actor
-> loss 在 compiled callable 内执行 `requires_grad_` 元数据修改，使 Dynamo 生成
-> 3 graphs / 2 graph breaks。将 critic 参数冻结移动到 compiled callable 外后恢复
-> 1 graph / 0 breaks，并通过 device-side finite gate、批量 metrics D2H、移除冗余
-> inference sync 等方式减少 host 同步碎片。最终在 RTX 4090、2048 env、batch 8192、
+> 本次排查确认，当前 SAC 性能回退并非 PR #667 的手工 CUDA Graph 被直接删除。
+> 基线真实默认路径是 `torch.compile`，但明确关闭 Inductor cudagraph，且手工 Graph
+> 四个开关也都为 false；在 RTX 4090 上手工 Graph 捕获未融合 eager kernels，微基准
+> 约为 29 ms。最终版开启“Inductor 先融合、再 cudagraph replay”，并把 critic 参数
+> 冻结放在 compiled callable 外，避免基线为 critic 计算无用权重梯度；同时通过
+> device-side finite gate、批量 metrics D2H、移除冗余 inference sync 等方式减少
+> host 同步碎片。排查中曾把冻结动作放进 compiled loss，产生 graph break，但那是
+> 中间实验写法，不是 `77450d2` 的源代码。最终在 RTX 4090、2048 env、batch 8192、
 > 每周期 8 critic + 2 actor 的完整 G1/MuJoCo 训练中，三次 300-iteration 实验的
 > tail-150 learner mean 分别为 19.177、19.140、18.749 ms，平均 19.022 ms，相比
 > 修复前约 24.56 ms 降低约 22.6%，达到单卡不超过 20 ms 的验收目标。
-

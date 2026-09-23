@@ -33,6 +33,17 @@ input-layout=replay_packed_views
 
 ## 1. 建立初始基线：先不要改代码
 
+先把“源代码到底走哪条路径”说清楚。生产配置
+`UniLab/src/unilab/conf/sac/config.yaml:37-41` 设置的是
+`use_compile=true`，而四个 `use_cuda_graph_*` 均为 `false`。因此原始生产 SAC
+不是手工 CUDA Graph，而是 `unilab_rl` 基线
+`src/uni_rl/algos/common/learner_boilerplate.py:95-104` 中的
+`torch.compile`，并且 compile 选项明确为 `triton.cudagraphs=false`。
+
+基线源码同时包含 `update_critic_cuda_graph` 和 `update_actor_cuda_graph`，但它们
+只有在配置显式打开对应开关时才会被 runner 调用。也就是说，“源码里有两条路径”
+不等于“一次训练同时跑两条路径”；生产配置每次只选择一条。
+
 ### 1.1 准备初始版本
 
 `unilab_rl` 的初始性能版本是 `77450d2`。在一个临时 worktree 中操作，避免
@@ -112,7 +123,8 @@ jq '.results[] | {case:.case.name, host:.cycle_host_ms}' \
   /tmp/sac-stage-01-compile-vs-manual.json
 ```
 
-历史结果：
+历史结果（`graph_packed` 是 benchmark 为了诊断而显式打开四个手工 Graph 开关，
+不是原始生产配置）：
 
 | 路径 | median |
 | --- | ---: |
@@ -264,7 +276,7 @@ Python 必须知道条件结果，这会等待 GPU。critic、actor、alpha 每�
 
 ## 6. 第五轮：定位真正的 graph break
 
-### 6.1 失败尝试：在 compiled loss 内冻结 critic
+### 6.1 中间实验：不要在 compiled loss 内冻结 critic
 
 为了避免 actor 更新时累计无用 critic 权重梯度，最初把下面逻辑写进
 `_actor_loss_tensors`：
@@ -284,7 +296,9 @@ for parameter in self.qnet.parameters():
 3 graphs / 2 graph breaks
 ```
 
-这正是新版性能回退的关键原因。它不能只看最终 loss 是否正确，必须检查图结构。
+这是排查过程中人为加入的中间写法，不属于原始基线 `77450d2`。它说明
+`requires_grad_` 不能放在 compiled loss 内，但不能据此断言原始源码已经包含这个
+graph break。
 
 ### 6.2 正确修复
 
@@ -425,6 +439,9 @@ inference 超时并退出，训练没有完成。对默认 5000 iterations 粗�
         └─ 三次完整训练：19.177 / 19.140 / 18.749 ms，最终通过
 ```
 
-这说明 mentor 关于“新代码可能破坏 CUDA Graph 结构”的方向是对的，但具体
-表现不是手工 Graph 被删除，而是 compiled actor loss 的 graph break 加上多处
-host synchronization，使原本连续的 GPU 工作重新变得碎片化。
+这说明 mentor 关于“新代码可能破坏 CUDA Graph 结构”的方向需要更精确地表述：
+手工 Graph 并未从源代码删除；原始默认路径反而是 `torch.compile` 且关闭
+Inductor cudagraph，手工 Graph 仅由显式开关启用。性能回退的可验证来源是关闭
+Inductor cudagraph、actor backward 为 critic 计算无用权重梯度，以及多处 host
+同步。`requires_grad_` 导致 graph break 只发生在排查时的中间尝试，最终版已将其
+移到 compiled callable 外。
