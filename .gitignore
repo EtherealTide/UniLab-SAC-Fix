@@ -5,5 +5,7 @@ results/*.json
 !results/training_single_graph_1.json
 !results/training_repeats.json
 !results/mentor_real_training_results.json
+!results/latest_main_real_training_results.json
+!results/historical_77450d_to_c543650_real_training_results.json
 __pycache__/
 .pytest_cache/

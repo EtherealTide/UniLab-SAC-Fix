@@ -1,0 +1,51 @@
+{
+  "metric": "timing/learner_train_ms",
+  "aggregation": "tail 150 of 300 iterations",
+  "workload": {
+    "gpu": "NVIDIA GeForce RTX 4090",
+    "task": "G1WalkFlat/MuJoCo",
+    "num_envs": 2048,
+    "batch_size": 8192,
+    "updates_per_step": 8,
+    "policy_frequency": 4,
+    "amp": true,
+    "target_mean_ms": 20.0
+  },
+  "baseline": {
+    "unilab_rl_commit": "f42570d1c27326bf61a4b4ed598d7eeac8f1225d",
+    "runs": [
+      {"name": "baseline_run1", "mean_ms": 26.805933062235514, "median_ms": 26.549541473388672, "p90_ms": 30.303756141662596, "p95_ms": 31.354078674316398},
+      {"name": "baseline_run2", "mean_ms": 27.557661730448405, "median_ms": 27.492728233337402, "p90_ms": 30.708158302307126, "p95_ms": 32.56679382324218},
+      {"name": "baseline_run3", "mean_ms": 27.140775210062664, "median_ms": 27.023250579833984, "p90_ms": 30.321509170532227, "p95_ms": 31.710981845855706}
+    ],
+    "mean_of_run_means_ms": 27.16812333424886,
+    "sample_stddev_of_run_means_ms": 0.3766097948482746,
+    "median_average_ms": 27.02184009552002,
+    "p90_average_ms": 30.444474538167317,
+    "p95_average_ms": 31.877284781138094
+  },
+  "final": {
+    "base_commit": "f42570d1c27326bf61a4b4ed598d7eeac8f1225d",
+    "patch_commit": "65dda3c9270905c8f50d1959e1143e8018c20814",
+    "runs": [
+      {"name": "final_run1", "mean_ms": 18.475327637990315, "median_ms": 18.576354026794434, "p90_ms": 22.753277015686034, "p95_ms": 23.61818618774414},
+      {"name": "final_run2", "mean_ms": 18.340715446472167, "median_ms": 18.824899673461914, "p90_ms": 22.174522972106935, "p95_ms": 23.133952713012693},
+      {"name": "final_run3", "mean_ms": 18.050857779184977, "median_ms": 18.670299530029297, "p90_ms": 21.897309684753417, "p95_ms": 22.635288619995112}
+    ],
+    "mean_of_run_means_ms": 18.288966954549153,
+    "sample_stddev_of_run_means_ms": 0.21691494893341406,
+    "median_average_ms": 18.690517743428547,
+    "p90_average_ms": 22.275036557515463,
+    "p95_average_ms": 23.129142506917315
+  },
+  "comparison": {
+    "absolute_reduction_ms": 8.879156379699708,
+    "latency_reduction_percent": 32.68225880183048,
+    "equivalent_throughput_increase_percent": 48.54925049493366,
+    "all_final_runs_pass_mean_le_20ms": true
+  },
+  "logs": {
+    "baseline": "/tmp/sac_latest_benchmark/baseline_run1..3",
+    "final": "/tmp/sac_latest_benchmark/final_run1..3"
+  }
+}
