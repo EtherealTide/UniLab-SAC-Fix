@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import gc
+import inspect
 import json
 import math
 import os
@@ -195,17 +196,41 @@ def run_case(case: Case, args: argparse.Namespace) -> dict[str, Any]:
 
     target_captured = bool(getattr(learner, "cuda_graph_critic_captures_target_update", False))
 
-    def critic_update(batch: dict[str, torch.Tensor], *, read_metrics: bool = False) -> None:
-        if case.critic_graph:
-            learner.update_critic_cuda_graph(batch, read_metrics=read_metrics)
+    critic_method = learner.update_critic_cuda_graph if case.critic_graph else learner.update_critic
+    actor_method = learner.update_actor_cuda_graph if case.actor_graph else learner.update_actor
+    critic_accepts_read_metrics = "read_metrics" in inspect.signature(critic_method).parameters
+    actor_accepts_read_metrics = "read_metrics" in inspect.signature(actor_method).parameters
+
+    def invoke_update(
+        method: Callable[..., Any],
+        batch: dict[str, torch.Tensor],
+        *,
+        read_metrics: bool,
+        accepts_read_metrics: bool,
+    ) -> None:
+        # The initial 77450d2 learner predates the read_metrics API.  Keep the
+        # benchmark usable for both the historical baseline and the optimized
+        # checkout instead of changing the old learner solely for benchmarking.
+        if accepts_read_metrics:
+            method(batch, read_metrics=read_metrics)
         else:
-            learner.update_critic(batch, read_metrics=read_metrics)
+            method(batch)
+
+    def critic_update(batch: dict[str, torch.Tensor], *, read_metrics: bool = False) -> None:
+        invoke_update(
+            critic_method,
+            batch,
+            read_metrics=read_metrics,
+            accepts_read_metrics=critic_accepts_read_metrics,
+        )
 
     def actor_update(batch: dict[str, torch.Tensor], *, read_metrics: bool = False) -> None:
-        if case.actor_graph:
-            learner.update_actor_cuda_graph(batch, read_metrics=read_metrics)
-        else:
-            learner.update_actor(batch, read_metrics=read_metrics)
+        invoke_update(
+            actor_method,
+            batch,
+            read_metrics=read_metrics,
+            accepts_read_metrics=actor_accepts_read_metrics,
+        )
 
     def update_window() -> None:
         for update_idx in range(args.updates_per_step):
@@ -225,7 +250,9 @@ def run_case(case: Case, args: argparse.Namespace) -> dict[str, Any]:
             if not target_captured:
                 learner.soft_update_target()
         if args.read_production_metrics:
-            learner.read_deferred_actor_metrics()
+            read_deferred_metrics = getattr(learner, "read_deferred_actor_metrics", None)
+            if callable(read_deferred_metrics):
+                read_deferred_metrics()
 
     # First call materializes optimizer state, compiles functions, and captures graphs.
     update_window()
