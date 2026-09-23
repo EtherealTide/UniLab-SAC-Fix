@@ -3,13 +3,16 @@
 This repository contains a reproducible benchmark for the FastSAC learner path
 used by `sac/g1_walk_flat/mujoco` in UniLab issue #662 and PR #667.
 
-The investigation and final numbers are documented in [RESULTS.md](RESULTS.md).
-The step-by-step Chinese reproduction guide and final report are available in
-[REPRODUCTION_REPORT_ZH.md](REPRODUCTION_REPORT_ZH.md).
+The audited result summary is documented in [RESULTS.md](RESULTS.md), and the
+mentor-facing Chinese report is [MENTOR_REPORT_ZH.md](MENTOR_REPORT_ZH.md).
+The step-by-step reproduction guide is available in
+[REPRODUCTION_REPORT_ZH.md](REPRODUCTION_REPORT_ZH.md); real-training profiler
+reproduction is documented in [PROFILE_REPRODUCTION_ZH.md](PROFILE_REPRODUCTION_ZH.md).
 The complete experiment-by-experiment optimization log is in
 [EXPERIMENT_LOG_ZH.md](EXPERIMENT_LOG_ZH.md).
-On an RTX 4090, three independent 300-iteration runs achieved tail-150 means of
-19.177, 19.140, and 18.749 ms, meeting the `<=20 ms` target in every run.
+On an RTX 4090, three independent baseline runs averaged 27.234 ms and three
+final runs averaged 18.050 ms over their tail-150 learner cycles. Latency fell
+33.72%, and every final run met the `mean <= 20 ms` target.
 
 The production `unilab_rl` change is included as a reviewable Git patch under
 `patches/`. Apply it from an `unilab_rl` checkout with:
@@ -21,8 +24,8 @@ git am /path/to/UniLab-SAC-Fix/patches/0001-perf-fast-sac-restore-fused-single-G
 The primary acceptance metric is one learner update cycle with the effective
 production shape: batch size 8192, eight critic updates, and two actor updates
 (`policy_frequency=4`), with observation/critic/action widths 98/101/29. The
-target on a single RTX 4090 is median host latency
-at or below 20 ms after warmup. CUDA-event latency is also recorded so host
+target on a single RTX 4090 is mean learner latency at or below 20 ms over
+iterations 151--300. CUDA-event latency is also recorded so host
 submission/synchronization regressions can be separated from device work.
 
 Run against a local `unilab_rl` checkout:

@@ -1,5 +1,10 @@
 # UniLab SAC 单卡性能问题复现与分析报告
 
+> 状态说明：本文保留早期排查和复现过程。最新六次 300-iteration 对称 A/B、
+> 真实训练 profiler 数据和最终 mentor 结论以
+> [MENTOR_REPORT_ZH.md](MENTOR_REPORT_ZH.md) 为准；不要再引用本文早期的
+> `24.56 -> 19.022 ms` 历史摘要作为正式结果。
+
 ## 1. 先理解我们要测什么
 
 这次验收对象不是一次普通的神经网络前向，而是一个完整的 SAC learner

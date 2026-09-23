@@ -1,55 +1,44 @@
-# Results
+# SAC performance results
 
-## Conclusion
+The final mentor-facing analysis is in [MENTOR_REPORT_ZH.md](MENTOR_REPORT_ZH.md).
 
-The regression was not caused by the manual CUDA Graph from UniLab PR #667
-being structurally broken. On the current RTX 4090 workload, that graph captures
-unfused eager kernels and is slower than the default `torch.compile` path:
+## Audited real-training result
 
-| Path | Learner cycle median |
-| --- | ---: |
-| Clean main, `torch.compile` | 19.38 ms |
-| Clean main, manual graph + packed staging | 29.14 ms |
+The comparison uses G1WalkFlat/MuJoCo on one RTX 4090, 2048 environments,
+batch size 8192, eight critic updates per cycle, policy frequency four, AMP,
+and three independent 300-iteration runs per version. The reported metric is
+the arithmetic mean of TensorBoard `timing/learner_train_ms` over iterations
+151--300.
 
-The current production path is therefore Inductor fusion plus Inductor CUDA
-Graph replay, with the four manual FastSAC graph flags left disabled.
+| Version | Mean of three run means | Sample SD | Result |
+| --- | ---: | ---: | --- |
+| Baseline `77450d2` | 27.234 ms | 0.358 ms | fail |
+| Final `c543650` | 18.050 ms | 0.504 ms | pass |
 
-## Root cause
+Latency decreased by 9.184 ms (33.72%); equivalent learner-update throughput
+increased by 50.88%. All three final runs satisfy the `mean <= 20 ms` target.
 
-The largest actionable graph regression was in the actor loss. Disabling and
-restoring critic parameter gradients inside the function passed to
-`torch.compile` caused Dynamo to produce three graphs with two graph breaks.
-Moving that metadata operation around the compiled callable restores one graph
-with zero graph breaks, while still preserving `dQ/da` and avoiding unused
-critic weight gradients.
+## Real-training profiler evidence
 
-Other latency came from host-visible finite checks, repeated scalar `.item()`
-reads, a redundant inference synchronization, and graph-external target-network
-updates on the legacy manual graph path.
+Separate 50-iteration G1/MuJoCo runs enabled UniLab's Perfetto/Chrome trace
+recorder, CUDA Events, and NVTX ranges. After excluding the first five compile
+and startup cycles:
 
-## Acceptance result
+| Event median | Baseline | Final |
+| --- | ---: | ---: |
+| Learner update phase | 27.356 ms | 18.931 ms |
+| Critic update | 2.187 ms | 1.373 ms |
+| Actor update | 2.525 ms | 0.934 ms |
+| Replay sample | 1.179 ms | 1.223 ms |
 
-The primary metric is the arithmetic mean of TensorBoard
-`timing/learner_train_ms` over iterations 151–300. Each cycle contains eight
-critic and two actor updates with batch size 8192.
+The improvement is concentrated in learner critic/actor work, while replay is
+essentially unchanged. This supports the code-level explanation: Inductor CUDA
+Graph replay, removal of repeated host synchronization and scalar reads, and
+elimination of unused critic-weight gradients during actor backward.
 
-| Independent run | Mean | Median | p90 | Result |
-| --- | ---: | ---: | ---: | --- |
-| 1 | 19.177 ms | 18.941 ms | 23.857 ms | pass |
-| 2 | 19.140 ms | 19.416 ms | 22.428 ms | pass |
-| 3 | 18.749 ms | 18.961 ms | 22.556 ms | pass |
+The current machine does not have Nsight Systems installed. These profiler
+results are application-level Perfetto slices and coarse CUDA Event spans, not
+invented per-kernel Nsight statistics. See `PROFILE_REPRODUCTION_ZH.md` for the
+optional Nsight procedure.
 
-The mean of the three run means is **19.022 ms**. All three runs satisfy the
-mentor target of `<=20 ms`. The earlier full-training baseline was about
-24.56 ms, so the final steady-state mean is about 22.6% lower.
-
-## Rejected experiment
-
-Inductor `max_autotune` reduced the isolated bursty microbenchmark to about
-15.63 ms, but added roughly 35 seconds of first-use compilation. In a real
-training launch, that pause exceeded the collector inference timeout and
-aborted at tick 11. It is not part of the final change.
-
-Raw selected results are under `results/`. The three-run summary is
-`results/training_repeats.json`. The production change is preserved as a
-standard `git am` patch under `patches/`.
+Machine-readable results are in `results/mentor_real_training_results.json`.

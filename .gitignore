@@ -4,5 +4,6 @@ results/*.json
 !results/bursty_final_single_graph.json
 !results/training_single_graph_1.json
 !results/training_repeats.json
+!results/mentor_real_training_results.json
 __pycache__/
 .pytest_cache/

@@ -1,0 +1,64 @@
+{
+  "metric": "timing/learner_train_ms",
+  "aggregation": "iterations 151-300 (tail 150)",
+  "environment": {
+    "gpu": "NVIDIA GeForce RTX 4090",
+    "cpu": "AMD Ryzen 9 9950X 16-Core Processor",
+    "task": "G1WalkFlat",
+    "backend": "mujoco",
+    "seed": 1,
+    "num_envs": 2048,
+    "batch_size": 8192,
+    "updates_per_step": 8,
+    "policy_frequency": 4,
+    "amp": true,
+    "iterations": 300
+  },
+  "baseline": {
+    "unilab_rl_commit": "77450d2ad00d1c56c320e45a2c4150dec2077acc",
+    "runs": [
+      {"name": "baseline_run1", "mean_ms": 26.829023412068686, "median_ms": 26.75741195678711, "p90_ms": 30.121129035949707, "p95_ms": 30.694790840148926},
+      {"name": "baseline_run2", "mean_ms": 27.50695580800374, "median_ms": 27.41708469390869, "p90_ms": 31.005155754089355, "p95_ms": 32.77106132507324},
+      {"name": "baseline_run3", "mean_ms": 27.366245244344075, "median_ms": 27.27962017059326, "p90_ms": 30.472629737854003, "p95_ms": 31.448038196563715}
+    ],
+    "mean_of_run_means_ms": 27.234074821472166,
+    "sample_stddev_of_run_means_ms": 0.35777066519792444
+  },
+  "final": {
+    "unilab_rl_commit": "c54365034f2ebbb2d419bc03f73bd47e2e5304ae",
+    "runs": [
+      {"name": "final_run1", "mean_ms": 18.317682444254558, "median_ms": 18.290027618408203, "p90_ms": 22.680477714538576, "p95_ms": 23.424754905700684},
+      {"name": "final_run2", "mean_ms": 17.468929964701335, "median_ms": 17.071243286132812, "p90_ms": 21.526820564270018, "p95_ms": 22.359920883178706},
+      {"name": "final_run3", "mean_ms": 18.36411568959554, "median_ms": 18.368377685546875, "p90_ms": 22.019892311096193, "p95_ms": 22.99333667755127}
+    ],
+    "mean_of_run_means_ms": 18.050242699517145,
+    "sample_stddev_of_run_means_ms": 0.5039666490081467
+  },
+  "comparison": {
+    "absolute_reduction_ms": 9.183832121955021,
+    "latency_reduction_percent": 33.721843617445785,
+    "equivalent_learner_throughput_increase_percent": 50.8792722338337,
+    "all_final_runs_pass_mean_le_20ms": true
+  },
+  "real_training_profiler": {
+    "type": "UniLab TraceRecorder Perfetto/Chrome trace with CUDA Events",
+    "iterations": 50,
+    "warmup_cycles_excluded": 5,
+    "baseline_trace": "/tmp/sac_report_profile_77450d2/perfetto_offpolicy_timeline.json",
+    "final_trace": "/tmp/sac_report_profile_c543650/perfetto_offpolicy_timeline.json",
+    "baseline": {
+      "update_phase_median_ms": 27.356,
+      "critic_update_median_ms": 2.187,
+      "actor_update_median_ms": 2.525,
+      "replay_sample_median_ms": 1.179,
+      "replay_gpu_gather_median_ms": 0.302
+    },
+    "final": {
+      "update_phase_median_ms": 18.931,
+      "critic_update_median_ms": 1.373,
+      "actor_update_median_ms": 0.934,
+      "replay_sample_median_ms": 1.223,
+      "replay_gpu_gather_median_ms": 0.280
+    }
+  }
+}
