@@ -38,6 +38,7 @@ CASES = {
     for case in (
         Case("eager", False, False, False, False),
         Case("compile_legacy", True, False, False, False, False),
+        Case("compile_cudagraphs", True, False, False, False, True),
         Case("compile", True, False, False, False),
         Case("graph", True, True, True, False),
         Case("graph_packed", True, True, True, True),

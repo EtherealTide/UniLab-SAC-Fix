@@ -145,7 +145,7 @@ PYTHONPATH=/tmp/unilab-rl-sac-baseline/src \
 UV_CACHE_DIR=/tmp/unilab-uv-cache \
 uv run --offline python \
   /home/pc823/桌面/unilabsim/UniLab-SAC-Fix/bench_fast_sac.py \
-  --cases compile,compile_legacy \
+  --cases compile,compile_cudagraphs \
   --warmup 10 --iterations 100 \
   --unilab-rl-root /tmp/unilab-rl-sac-baseline \
   --output /tmp/sac-stage-02-inductor-ab.json
@@ -428,4 +428,3 @@ inference 超时并退出，训练没有完成。对默认 5000 iterations 粗�
 这说明 mentor 关于“新代码可能破坏 CUDA Graph 结构”的方向是对的，但具体
 表现不是手工 Graph 被删除，而是 compiled actor loss 的 graph break 加上多处
 host synchronization，使原本连续的 GPU 工作重新变得碎片化。
-
